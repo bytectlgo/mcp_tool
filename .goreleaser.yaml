@@ -5,21 +5,16 @@ before:
     - go mod tidy
 
 builds:
-  - main: ./cmd/weather_mcp
-    binary: weather_mcp
-    env:
+  - env:
       - CGO_ENABLED=0
     goos:
-      - darwin
       - linux
+      - darwin
       - windows
     goarch:
       - amd64
       - arm64
-    flags:
-      - -trimpath
-    ldflags:
-      - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}}
+    main: ./cmd/weather_mcp
 
 archives:
   - format: tar.gz
@@ -46,15 +41,16 @@ changelog:
       - "^docs:"
       - "^test:"
       - "^ci:"
-      - "^chore:"
-      - "^refactor:"
-      - "^style:"
 
 brews:
   - name: mcp_tool
+    folder: Formula
     homepage: "https://github.com/bytectlgo/mcp_tool"
     description: "A weather query MCP tool"
     license: "MIT"
+    tap:
+      owner: bytectlgo
+      name: homebrew-tap
     install: |
       bin.install "weather_mcp"
     test: |

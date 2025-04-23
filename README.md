@@ -13,6 +13,18 @@ A Go-based weather query MCP tool that provides global weather information using
 
 ## Installation
 
+### Using Homebrew (Recommended)
+
+```bash
+# Add tap source
+brew tap bytectlgo/homebrew-tap
+
+# Install tool
+brew install mcp_tool
+```
+
+### Manual Installation
+
 1. Ensure Go 1.21 or higher is installed
 2. Clone the repository:
    ```bash

@@ -19,7 +19,19 @@
 
 ### 2. 安装
 
-#### 2.1 克隆并安装
+#### 2.1 使用 Homebrew 安装（推荐）
+
+```bash
+# 添加 tap 源
+brew tap bytectlgo/homebrew-tap
+
+# 安装工具
+brew install mcp_tool
+```
+
+#### 2.2 手动安装
+
+##### 2.2.1 克隆并安装
 
 ```bash
 git clone https://github.com/bytectlgo/mcp_tool.git
@@ -27,7 +39,7 @@ cd mcp_tool
 go mod download
 ```
 
-#### 2.2 配置 API Key
+##### 2.2.2 配置 API Key
 
 **方法1：使用配置文件（推荐）**
 
@@ -51,7 +63,7 @@ Windows:
 set OPENWEATHERMAP_API_KEY=your_api_key
 ```
 
-#### 2.3 编译和运行
+##### 2.2.3 编译和运行
 
 使用 Makefile 编译和运行：
 
@@ -73,14 +85,14 @@ go build -o bin/weather_mcp ./cmd/weather_mcp
 ./bin/weather_mcp
 ```
 
-#### 2.4 启用工具
+#### 2.3 启用工具
 
 编辑 `~/.cursor/mcp.json`（Windows：`%USERPROFILE%\.cursor\mcp.json`）：
 
 ```json
 {
     "weather_mcp": {
-        "command": "bin/weather_mcp"
+        "command": "weather_mcp"
     }
 }
 ```
@@ -119,9 +131,14 @@ go build -o bin/weather_mcp ./cmd/weather_mcp
    - 检查拼写  
    - 使用完整的城市名称
 
+## 👨‍💻 作者
+
+* 字节控制
+* Email: your-email@example.com
 
 ## 🙏 致谢
 
+* FastMCP
 * OpenWeatherMap
 * Cursor
 
