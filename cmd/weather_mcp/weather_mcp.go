@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"github.com/briandowns/openweathermap"
 	"github.com/mark3labs/mcp-go/mcp"
@@ -20,9 +21,11 @@ type WeatherResponse struct {
 }
 
 type Forecast struct {
-	Date        string  `json:"date"`
-	Temperature float64 `json:"temperature"`
+	Date        int64   `json:"date"`
+	TempMin     float64 `json:"temp_min"`
+	TempMax     float64 `json:"temp_max"`
 	Description string  `json:"description"`
+	Humidity    int     `json:"humidity"`
 }
 
 func main() {
@@ -45,7 +48,7 @@ func main() {
 		mcp.WithDescription("查询天气信息"),
 		mcp.WithString("city", mcp.Description("城市名称"), mcp.Required()),
 		mcp.WithNumber("days", mcp.Description("预报天数"), mcp.DefaultNumber(1)),
-		mcp.WithString("units", mcp.Description("温度单位"), mcp.Enum("metric", "imperial"), mcp.DefaultString("metric")),
+		mcp.WithString("units", mcp.Description("温度单位"), mcp.Enum("C", "F"), mcp.DefaultString("C")),
 		mcp.WithString("lang", mcp.Description("返回语言"), mcp.Enum("zh", "en"), mcp.DefaultString("zh")),
 	)
 
@@ -61,7 +64,7 @@ func main() {
 			days = int(d)
 		}
 
-		units := "metric"
+		units := "C"
 		if u, ok := args["units"].(string); ok {
 			units = u
 		}
@@ -91,22 +94,53 @@ func main() {
 
 		// 如果需要预报
 		if days > 1 {
-			f, err := openweathermap.NewForecast(units, lang, apiKey, "5")
+			// 使用 OneCall API 获取天气预报
+			oc, err := openweathermap.NewOneCall(units, lang, apiKey, nil)
 			if err != nil {
 				return mcp.NewToolResultError(fmt.Sprintf("初始化预报客户端失败: %v", err)), nil
 			}
 
-			err = f.DailyByName(city, days)
+			err = oc.OneCallByCoordinates(
+				&openweathermap.Coordinates{
+					Latitude:  w.GeoPos.Latitude,
+					Longitude: w.GeoPos.Longitude,
+				},
+			)
 			if err != nil {
 				return mcp.NewToolResultError(fmt.Sprintf("获取预报信息失败: %v", err)), nil
 			}
 
-			// 由于 ForecastWeatherJson 是一个接口，我们需要使用反射或其他方式来访问数据
-			// 这里我们暂时只返回当前天气信息
-			response.Forecast = []Forecast{}
+			// 添加预报信息
+			response.Forecast = make([]Forecast, 0, days)
+			for i, day := range oc.Daily {
+				if i >= days {
+					break
+				}
+				response.Forecast = append(response.Forecast, Forecast{
+					Date:        int64(day.Dt),
+					TempMin:     day.Temp.Min,
+					TempMax:     day.Temp.Max,
+					Description: day.Weather[0].Description,
+					Humidity:    day.Humidity,
+				})
+			}
 		}
 
-		return mcp.NewToolResultText(fmt.Sprintf("%+v", response)), nil
+		// 格式化当前天气信息
+		currentWeather := fmt.Sprintf("城市: %s\n当前温度: %.1f°%s\n天气状况: %s\n湿度: %d%%",
+			response.City, response.Temperature, units, response.Description, response.Humidity)
+
+		// 如果有预报信息，添加预报
+		if len(response.Forecast) > 0 {
+			currentWeather += "\n\n未来天气预报:"
+			for _, forecast := range response.Forecast {
+				date := time.Unix(forecast.Date, 0).Format("2006-01-02")
+				currentWeather += fmt.Sprintf("\n%s: %.1f°%s ~ %.1f°%s, %s, 湿度: %d%%",
+					date, forecast.TempMin, units, forecast.TempMax, units, forecast.Description, forecast.Humidity)
+			}
+		}
+
+		return mcp.NewToolResultText(currentWeather), nil
 	})
 
 	log.Println("天气查询服务启动中...")

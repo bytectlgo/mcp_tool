@@ -5,7 +5,7 @@ go 1.23
 toolchain go1.24.0
 
 require (
-	github.com/briandowns/openweathermap v0.19.0
+	github.com/briandowns/openweathermap v0.21.1
 	github.com/mark3labs/mcp-go v0.23.0
 )
 
